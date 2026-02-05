@@ -1,0 +1,19 @@
+version: '3.8'
+
+services:
+  mariadb:
+    image: mariadb:11.2
+    container_name: leaderboard-db
+    environment:
+      MYSQL_ROOT_PASSWORD: root
+      MYSQL_DATABASE: leaderboard
+      MYSQL_USER: leaderboard_user
+      MYSQL_PASSWORD: leaderboard_pass
+    ports:
+      - "3306:3306"
+    volumes:
+      - mariadb-data:/var/lib/mysql
+    command: --local-infile=1
+
+volumes:
+  mariadb-data:
