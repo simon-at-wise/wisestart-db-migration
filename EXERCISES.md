@@ -20,10 +20,11 @@ This document contains hands-on exercises to practice database migration pattern
 3. Use a safe migration pattern for adding non-null columns
 4. Existing players should get a default email in the format: `player_{id}@example.com`
 
-**tools**
-- generate the backfill data through `python ./scripts/generate-data.sh`
+**Tools**
+- Generate the backfill data through `python ./scripts/generate-data.sh`
 - Look up how to use 'LOAD DATA LOCAL INFILE'
-
+- New migration file in `src/main/resources/db/migration/`
+- You will need to update PlayerService to show the email.
 
 **Steps**:
 1. Create a new migration file in `src/main/resources/db/migration/`
