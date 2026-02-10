@@ -1,15 +1,15 @@
 -- Insert 10 initial players
-INSERT INTO players (username, email, created_at) VALUES
-('alice_gamer', 'alice@example.com', '2024-01-15 10:00:00'),
-('bob_pro', 'bob@example.com', '2024-01-16 11:30:00'),
-('charlie_plays', 'charlie@example.com', '2024-01-17 09:15:00'),
-('diana_wins', 'diana@example.com', '2024-01-18 14:20:00'),
-('eve_master', 'eve@example.com', '2024-01-19 16:45:00'),
-('frank_ninja', 'frank@example.com', '2024-01-20 08:00:00'),
-('grace_legend', 'grace@example.com', '2024-01-21 12:30:00'),
-('hank_elite', 'hank@example.com', '2024-01-22 15:00:00'),
-('iris_champ', 'iris@example.com', '2024-01-23 10:45:00'),
-('jack_ace', 'jack@example.com', '2024-01-24 13:15:00');
+INSERT INTO players (username, created_at) VALUES
+('alice_gamer', '2024-01-15 10:00:00'),
+('bob_pro', '2024-01-16 11:30:00'),
+('charlie_plays', '2024-01-17 09:15:00'),
+('diana_wins', '2024-01-18 14:20:00'),
+('eve_master', '2024-01-19 16:45:00'),
+('frank_ninja', '2024-01-20 08:00:00'),
+('grace_legend', '2024-01-21 12:30:00'),
+('hank_elite', '2024-01-22 15:00:00'),
+('iris_champ', '2024-01-23 10:45:00'),
+('jack_ace', '2024-01-24 13:15:00');
 
 -- Insert 20 match records
 INSERT INTO matches (player_id, score, played_at) VALUES

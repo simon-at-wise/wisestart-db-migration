@@ -20,10 +20,15 @@ This document contains hands-on exercises to practice database migration pattern
 3. Use a safe migration pattern for adding non-null columns
 4. Existing players should get a default email in the format: `player_{id}@example.com`
 
+**tools**
+- generate the backfill data through `python ./scripts/generate-data.sh`
+- Look up how to use 'LOAD DATA LOCAL INFILE'
+
+
 **Steps**:
 1. Create a new migration file in `src/main/resources/db/migration/`
 2. Add the email column as nullable first
-3. Backfill data for existing players
+3. Backfill data for existing players (generate through ./scripts/generate-data.sh)
 4. Add the NOT NULL constraint
 5. Add a unique constraint
 6. Update the Player entity to include the email field
