@@ -26,8 +26,8 @@ def generate_players():
     """Generate players CSV."""
     print(f"Generating {NUM_PLAYERS:,} players...")
 
-    adjectives = ["swift", "mighty", "clever", "brave", "silent", "fierce", "wise", "dark", "bright", "cool"]
-    nouns = ["dragon", "phoenix", "tiger", "wolf", "eagle", "ninja", "warrior", "mage", "knight", "hunter"]
+    adjectives = ["swift", "starry", "mighty", "clever", "brave", "silent", "fierce", "wise", "dark", "bright", "cool", "lightning", "fiery", "blazing", "destroyed", "ripping", "soulless", "awesome", "constructed", "maligned", "misinformed", "upset", "lazy", "corny", "sappy"]
+    nouns = ["dragon", "phoenix", "tiger", "wolf", "eagle", "ninja", "warrior", "mage", "knight", "hunter", "legolas","hunted", "saviour", "desolate", "wanderer", "warrior" ,"ripper", "burner", "monster", "destroyer", "fornicator", "salivator","constructor", "surrounder", "surrealist", "normie", "tweaker"]
 
     players_file = OUTPUT_DIR / "players_historical.csv"
 
@@ -41,8 +41,8 @@ def generate_players():
         for i in range(NUM_PLAYERS):
             adj = random.choice(adjectives)
             noun = random.choice(nouns)
-            username = f"{adj}_{noun}_{i}"
-            email = f"{username}@gamers.example.com"
+            username = f"{adj}_{noun}"
+            email = f"{username}_{i}@gamers.example.com"
             created_at = random_date(start_date, end_date).strftime('%Y-%m-%d %H:%M:%S')
 
             writer.writerow([username, email, created_at])

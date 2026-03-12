@@ -26,11 +26,12 @@ public class Player {
     @Column(nullable = false, unique = true, length = 50)
     private String username;
 
-    @NotBlank
-    @Email
-    @Size(max = 100)
-    @Column(nullable = false, unique = true, length = 100)
-    private String email;
+    // TODO: Exercise 1 - uncomment this
+//    @NotBlank
+//    @Email
+//    @Size(max = 100)
+//    @Column(nullable = false, unique = true, length = 100)
+//    private String email;
 
     @Column(name = "created_at", nullable = false, updatable = false)
     private LocalDateTime createdAt;

@@ -10,10 +10,16 @@ services:
       MYSQL_USER: leaderboard_user
       MYSQL_PASSWORD: leaderboard_pass
     ports:
-      - "3306:3306"
+      - "3316:3306"
     volumes:
       - mariadb-data:/var/lib/mysql
-    command: --local-infile=1
+      - ./docker/init-db.sql:/docker-entrypoint-initdb.d/init-db.sql
+    command:
+      - --local-infile=1
+      - --innodb-buffer-pool-size=5242880      # 5MB buffer pool (minimum, forces disk I/O)
+      - --innodb-flush-method=O_DIRECT         # Direct I/O (no OS cache)
+      - --innodb-log-file-size=5242880         # 5MB log file
+      - --innodb-flush-log-at-trx-commit=1     # Full ACID compliance (slower)
 
 volumes:
   mariadb-data:

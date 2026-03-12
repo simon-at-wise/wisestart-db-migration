@@ -1,12 +1,18 @@
 # This is a Gradle generated file for dependency locking.
 # Manual edits can break the build and are not advised.
 # This file is expected to be part of source control.
-com.fasterxml.jackson.core:jackson-annotations:2.14.2=classpath
-com.fasterxml.jackson.core:jackson-core:2.14.2=classpath
-com.fasterxml.jackson.core:jackson-databind:2.14.2=classpath
-com.fasterxml.jackson.module:jackson-module-parameter-names:2.14.2=classpath
-com.fasterxml.jackson:jackson-bom:2.14.2=classpath
+com.fasterxml.jackson.core:jackson-annotations:2.15.2=classpath
+com.fasterxml.jackson.core:jackson-core:2.15.2=classpath
+com.fasterxml.jackson.core:jackson-databind:2.15.2=classpath
+com.fasterxml.jackson.dataformat:jackson-dataformat-toml:2.15.2=classpath
+com.fasterxml.jackson.module:jackson-module-parameter-names:2.15.2=classpath
+com.fasterxml.jackson:jackson-bom:2.15.2=classpath
+com.github.ben-manes.caffeine:caffeine:2.9.3=classpath
+com.github.waffle:waffle-jna:3.3.0=classpath
 com.google.code.findbugs:jsr305:3.0.2=classpath
+com.google.code.gson:gson:2.10.1=classpath
+com.google.errorprone:error_prone_annotations:2.10.0=classpath
+gradle.plugin.org.flywaydb:gradle-plugin-publishing:10.6.0=classpath
 io.spring.dependency-management:io.spring.dependency-management.gradle.plugin:1.1.4=classpath
 io.spring.gradle:dependency-management-plugin:1.1.4=classpath
 net.java.dev.jna:jna-platform:5.13.0=classpath
@@ -16,7 +22,13 @@ org.apache.commons:commons-compress:1.23.0=classpath
 org.apache.httpcomponents.client5:httpclient5:5.2.3=classpath
 org.apache.httpcomponents.core5:httpcore5-h2:5.2.4=classpath
 org.apache.httpcomponents.core5:httpcore5:5.2.4=classpath
-org.slf4j:slf4j-api:1.7.36=classpath
+org.checkerframework:checker-qual:3.32.0=classpath
+org.flywaydb.flyway:org.flywaydb.flyway.gradle.plugin:10.6.0=classpath
+org.flywaydb:flyway-core:10.6.0=classpath
+org.flywaydb:flyway-mysql:10.6.0=classpath
+org.mariadb.jdbc:mariadb-java-client:3.3.2=classpath
+org.slf4j:jcl-over-slf4j:2.0.7=classpath
+org.slf4j:slf4j-api:2.0.7=classpath
 org.springframework.boot:org.springframework.boot.gradle.plugin:3.2.2=classpath
 org.springframework.boot:spring-boot-buildpack-platform:3.2.2=classpath
 org.springframework.boot:spring-boot-gradle-plugin:3.2.2=classpath

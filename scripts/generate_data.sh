@@ -10,7 +10,7 @@ fi
 SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 cd "$SCRIPT_DIR"
 
-python3 generate-data.py
+python3 generate_data.py
 
 echo ""
 echo "Data generation complete!"

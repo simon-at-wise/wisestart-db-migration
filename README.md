@@ -22,7 +22,6 @@ This is an educational project simulating a game leaderboard system. Teams work 
 - **Java 21** - [Download here](https://adoptium.net/)
 - **Docker & Docker Compose** - [Download here](https://docs.docker.com/get-docker/)
 - **Basic SQL knowledge** - Understanding of SELECT, INSERT, CREATE TABLE
-- **Git** - For version control
 
 ## Quick Start
 
@@ -30,7 +29,7 @@ This is an educational project simulating a game leaderboard system. Teams work 
 
 ```bash
 git clone <repository-url>
-cd game-leaderboard-service
+cd wisestart-db-migration
 ```
 
 ### 2. Start Database
@@ -61,15 +60,18 @@ curl http://localhost:8080/players
 # View leaderboard (top scores)
 curl http://localhost:8080/matches/leaderboard
 
-# Check migration history
+# Check server health
 curl http://localhost:8080/actuator/health
 ```
 
 ### 5. Explore Database
 
 ```bash
-docker exec -it leaderboard-db mysql -u leaderboard_user -pleaderboard_pass leaderboard
+docker exec -it leaderboard-db mariadb -u leaderboard_user -pleaderboard_pass leaderboard
 ```
+
+You can also use the built in database explorer in IntelliJ:
+Add a new MariaDB database connection with host `localhost:3316` and the username/password from the service application.yml file
 
 ```sql
 -- See applied migrations
@@ -84,15 +86,12 @@ DESCRIBE matches;
 exit;
 ```
 
-You can also use the built in database explorer in IntelliJ:
-Add a new MariaDB database connection with the username/password from the service application.yml file
-
-
-
 ## Project Structure
 
 ```
-game-leaderboard-service/
+wisestart-db-migration/
+├── data/
+│   └── original_player_emails.csv      # used for filling data in exercise 2
 ├── src/main/
 │   ├── java/com/wise/leaderboard/     # Application code
 │   └── resources/
@@ -140,36 +139,19 @@ See **[EXERCISES.md](EXERCISES.md)** for the complete list of hands-on exercises
 ./gradlew clean build
 ```
 
-### Database
+### Resetting the Database when you messed up
 
 ```bash
-# Start database
-docker-compose up -d
-
-# Stop database
-docker-compose down
-
 # Reset everything (nuclear option)
 ./scripts/reset-database.sh
 
-# Connect to database
-docker exec -it leaderboard-db mysql -u leaderboard_user -pleaderboard_pass leaderboard
-
-# View logs
-docker-compose logs -f mariadb
 ```
 
 ### Flyway
-
+For if you're lazy, this will show the flyway status:
 ```bash
 # Show migration status
 ./gradlew flywayInfo
-
-# Repair checksums
-./gradlew flywayRepair
-
-# Validate migrations
-./gradlew flywayValidate
 ```
 
 ### Data Generation
@@ -191,7 +173,7 @@ docker-compose logs -f mariadb
   ```json
   {
     "username": "player123",
-    "email": "player@example.com"
+    "email": "player@example.com" // after exercise 3
   }
   ```
 
@@ -205,37 +187,38 @@ docker-compose logs -f mariadb
   ```json
   {
     "playerId": 1,
-    "score": 2500
+    "score": 2500,
+    "difficulty": "hard",
+    "timeStarted": "2024-01-25T10:00:00",
+    "timeEnded": "2024-01-25T10:25:00",
+    "settings": {
+      "sound": true,
+      "music": false,
+      "hints": false
+    },
+    "maxLevel": 9,
+    "experienceGained": 625,
+    "powerups": ["double_points", "shield", "speed_boost"],
+    "feedbackScore": 5
   }
   ```
+  Note: Only `playerId` and `score` are required. All other fields are optional.
 
 ### Health
 
 - `GET /actuator/health` - Application health status
 
-## Database Schema
+## Performance Testing
 
-### `players` Table
+This project is configured with a **5MB InnoDB buffer pool** (the minimum allowed size) to simulate realistic production performance characteristics where data must be read from disk.
 
-| Column      | Type          | Constraints          |
-|-------------|---------------|----------------------|
-| id          | BIGINT        | PRIMARY KEY, AUTO_INCREMENT |
-| username    | VARCHAR(50)   | UNIQUE, NOT NULL     |
-| email       | VARCHAR(100)  | UNIQUE, NOT NULL     |
-| created_at  | TIMESTAMP     | NOT NULL             |
+### Why This Matters
 
-### `matches` Table
-
-| Column      | Type          | Constraints                    |
-|-------------|---------------|--------------------------------|
-| id          | BIGINT        | PRIMARY KEY, AUTO_INCREMENT    |
-| player_id   | BIGINT        | NOT NULL, FOREIGN KEY → players.id |
-| score       | INT           | NOT NULL                       |
-| played_at   | TIMESTAMP     | NOT NULL                       |
-
-**Indexes:**
-- `idx_player_id` on player_id
-- `idx_played_at` on played_at
+In production databases with large tables:
+- Buffer pool may be 1-8GB, but tables can be 100s of GB
+- Most queries hit disk, not memory cache
+- Index creation can take minutes or hours
+- Schema changes can lock tables for extended periods
 
 ## Technology Stack
 
@@ -254,31 +237,14 @@ docker-compose logs -f mariadb
 **Symptom:** "Connection refused" or "Unknown database"
 
 **Solution:**
-```bash
-# Check database is running
-docker-compose ps
+Check database is running and restart the docker containers if needed
 
-# If not running
-docker-compose up -d
+### Port already in use
 
-# Wait 10 seconds, then retry
-./gradlew bootRun
-```
-
-### Port 3306 already in use
-
-**Symptom:** "Port 3306 is already allocated"
+**Symptom:** "Port 3316 is already allocated"
 
 **Solution:**
-```bash
-# Stop local MySQL/MariaDB
-sudo systemctl stop mysql  # Linux
-brew services stop mariadb  # macOS
-
-# Or change port in docker-compose.yml and application.yml
-ports:
-  - "3307:3306"  # Map to 3307 instead
-```
+This project uses port 3316 to avoid conflicts with other MariaDB services running on the default port 3306. If you still encounter port conflicts, you can change the port mapping in both `docker-compose.yml` and `application.yml`, or you can stop existing docker containers on that port.
 
 ### Migration checksum mismatch
 
@@ -293,7 +259,7 @@ ports:
 git checkout -- src/main/resources/db/migration/VX__*.sql
 
 # Repair checksums
-./gradlew flywayRepair
+add flyway.repair() to your FlywayMigrationConfig.
 
 # Restart
 ./gradlew bootRun
@@ -311,7 +277,7 @@ git checkout -- src/main/resources/db/migration/VX__*.sql
 # Fix the SQL in the migration file
 
 # Repair (marks failed migration as pending)
-./gradlew flywayRepair
+add flyway.repair() to your FlywayMigrationConfig.
 
 # Restart (will re-run the migration)
 ./gradlew bootRun
@@ -319,7 +285,7 @@ git checkout -- src/main/resources/db/migration/VX__*.sql
 
 ### Need to start over
 
-**Symptom:** Database is in unknown state
+**Symptom:** Database is in unknown state, you broke it and can't figure out how to restore it.
 
 **Solution:**
 ```bash
@@ -339,7 +305,6 @@ git checkout -- src/main/resources/db/migration/VX__*.sql
 2. **Forgetting to start Docker** - Application needs database running first.
 3. **Not waiting for database** - Give MariaDB 10 seconds to initialize.
 4. **Timeout on large data loads** - Adjust Flyway timeout for bulk operations.
-5. **File paths in LOAD DATA** - Use absolute paths or mount volumes correctly.
 
 ## Learning Resources
 
@@ -347,6 +312,8 @@ git checkout -- src/main/resources/db/migration/VX__*.sql
 - [MySQL Online DDL](https://dev.mysql.com/doc/refman/8.0/en/innodb-online-ddl.html)
 - [Spring Boot + Flyway](https://docs.spring.io/spring-boot/docs/current/reference/html/howto.html#howto.data-initialization.migration-tool.flyway)
 - [Expand-Contract Pattern](https://martinfowler.com/bliki/ParallelChange.html)
+
+- [Presentation](https://docs.google.com/presentation/d/1z3l2eGlqNl8_RMLKt7Kjxi5WGsTWJUmCrlCokFuyz-0/edit?usp=sharing)
 
 ## Contributing
 

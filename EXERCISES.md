@@ -8,76 +8,186 @@ This document contains hands-on exercises to practice database migration pattern
 - Familiarize yourself with the codebase structure
 - Understand basic SQL and database concepts
 
-## Exercise 1: Add Player Email Field
+## Exercise 0: Understand the Service
 
-**Objective**: Learn to add a new non-null column with a default value.
+**Objective**: Check that the service runs as you'd expect
 
-**Scenario**: The product team wants to send email notifications to players. Add an email field to the players table.
+Use the readme to make sure that:
+- Service can run
+- You can query the endpoints
+- You can connect to the database and see the three tables
+
+**Output**: Use Describe flyway_schema_history to see the table, and then post to Slack with an explanation of one of the columns that hasn't been explained yet by others
+
+---
+
+## Exercise 1: Understanding Flyway Repair and why Migrations are Immutable
+
+**Objective**: Understanding common migration issues
+
+**Tools**: 
+- Connection to the database server and ability to read and modify the data (through mysql or the database panel in IntelliJ)
+- Migration files in /src/main/resources/db/migration
+
+**Steps**:
+1. Open the migration folder and check out migrations V1 and V2
+2. Update V2__Seed_initial_data.sql with an extra item
+3. Run the application
+4. See the error message.
+
+Questions: 
+- Flyway migration has failed. Why? How?
+- What will be required to run this migration again?
+
+Steps:
+5. Remove the entry for V2 in the flyway_schema (DELETE from flyway_schema_history where ..) 
+6. Run the application again. 
+7. If it succeeded, check the players table.
+8. If it failed, fix your syntax then repeat step 5-6-7
+
+Questions:
+- What has happened during startup this time?
+- Should we have emptied the table first? Should we have created a separate migration? Are there other solutions?
+
+Steps:
+9. Change the migration file again. 
+10. Run the application again. You'll get the same error. Check the flyway schema to see what has changed.
+11. Now add flyway.repair() to the FlywayMigrationConfig and run again.
+
+Questions:
+- What is different in the flyway schema this time? 
+- What is the difference between removing and repairing?
+- What should we do instead of changing the previous migration? 
+- When should we use which approach?
+
+Before you continue, reset the database with the reset script from the Readme.
+
+**Learnings**: 
+- Don't have repair() on by default, but know to use it to 'fix' small mistakes.
+- Know how to fix your migrations locally and on staging while you're still developing / finding out what you need to do.
+
+**Output**: Post your flyway migration table after successfully running the migration again. And formulate at least one alternative solution to add an extra element.
+
+**Note**: Make sure to remove flyway.repair() again before you continue because it's not supposed to remain in production code!
+
+---
+
+## Exercise 2: Add Player Email Field
+
+**Objective**: Learn to add a new non-null column with a default value, and to update the related entities.
+
+**Scenario**: The product team wants to send email notifications to players. Add an email field to the players table, and update the APIs accordingly.
 
 **Requirements**:
 1. Email should be non-null
-2. Email should have a unique constraint
+2. Email should have a unique constraint, and since we will want to search by email, make sure it's indexed
 3. Use a safe migration pattern for adding non-null columns
-4. Existing players should get a default email in the format: `player_{id}@example.com`
+4. Fill data from data/original_player_emails.csv. Existing players who don't have an email should get a default email in the format: `player_{id}@example.com`
+
+**Tools**
+- New migration file(s) in `src/main/resources/db/migration/`
+- PlayerService and PlayerController to show the email.
 
 **Steps**:
 1. Create a new migration file in `src/main/resources/db/migration/`
 2. Add the email column as nullable first
-3. Backfill data for existing players
+3. Backfill data for existing players from /data/original_player_emails.csv using the migration
 4. Add the NOT NULL constraint
 5. Add a unique constraint
 6. Update the Player entity to include the email field
 7. Update PlayerService to handle email when creating players
-8. Run the application and verify the migration
+8. Run the application and verify the migration and updated endpoints
 
 **Validation**:
 - Run `./gradlew bootRun` and check logs for successful migration
 - Query the database: `SELECT id, username, email FROM players;`
-- Verify existing players have default emails
-- Create a new player and verify email is required
+- Verify existing players in the database have emails
+- Verify existing players have emails when querying the /players API
+- Create a new player through the API and verify email is required
 
 **Learning Points**:
-- Why we add columns as nullable first
+- Why we add columns as nullable
 - Importance of backfilling data
 - Adding constraints after data is populated
 - Entity-database synchronization
 
+**Output**: Write to the Slack channel your new Flyway_schema_history and the result of `describe players`
+
 ---
 
-## Exercise 2: Add Game Metadata
+## Exercise 3: Backfill large amount of player data
 
-**Objective**: Practice adding multiple columns and working with JSON data.
+**Objective**: Add a large amount of data to an existing database table
 
-**Scenario**: Game sessions need to store additional metadata like game mode, duration, and settings.
+**Scenario**: Now that the new system is complete and working, we wish to import a large amount of player data.
 
-**Requirements**:
-1. Add `game_mode` column (VARCHAR, values: 'casual', 'ranked', 'tournament')
-2. Add `duration_seconds` column (INTEGER, nullable)
-3. Add `settings` column (JSON, nullable) for flexible configuration storage
-4. Set default game_mode to 'casual' for existing games
+**Requirements**: 
+1. Find a way to import the new player data from /data/players_historical.csv into the players table
+
+**Tools**:
+- Consider using your AI agent or alternatives to come up with solutions.
+- If it looks like things take a long time, consider how to speed them up.
 
 **Steps**:
-1. Create a new migration file
-2. Add the three new columns
-3. Backfill game_mode for existing games
-4. Update the Game entity with new fields
-5. Update GameService to handle new fields
-6. Test with different game modes and settings
+1. Generate the new player data by running `scripts/generate-data.sh` 
+2. Find a way to import all the player data into the players table. Do not use LOAD DATA.
 
 **Validation**:
-- Verify all existing games have game_mode = 'casual'
-- Create new games with different modes
-- Store and retrieve JSON settings (e.g., `{"difficulty": "hard", "map": "arena_1"}`)
+- Check the database table to see that all 100.000 new players have been imported.
+- See that those players are returned through the API
 
 **Learning Points**:
-- Working with ENUM-like values in PostgreSQL
-- Using JSON columns for flexible data
-- Default values vs nullable columns
-- When to use structured vs unstructured data
+- Understand the different tools available to do such import
+
+**Discuss**: What are the pros and cons of the options you have? Why can't we use LOAD DATA in practice?
+
+**Output**: Slack how long it took for you to migrate all the data. Summarize the issues you faced and what solutions you chose and why.
 
 ---
 
-## Exercise 3: Rename Player Username
+## Exercise 4a: Add index to players - Unhealthy data
+
+**Objective**: Practice adding an index to a table where data isn't healthy.
+
+**Scenario**: We need to select players by username. Unfortunately, it looks like some of our users are duplicates because the previous system allowed for this.
+
+**Steps**:
+1. Add a new migration file that adds a unique key to the players.username column. Make sure to use 'if not exists' in this query
+2. Run the migration - Check that it succeeds.
+3. If it fails: Come up with a practical solution for the duplicate usernames, and apply it using the same V4 migration.
+4. Run it again and show that it works.
+
+**Learning Points**:
+- Make sure to use if not exists when creating an index.
+- Make sure that the data is healthy before adding an index
+- Understand the impact of adding an index. Does it lock the table? How long will it take? What happens if the migration times out?
+
+**Output**: Write your index migration SQL to the Slack channel. How long did it take to run? List the issues you ran into and what you did to solve them.
+
+---
+
+## Exercise 4b: Add index to matches - Large Dataset
+
+**Objective**: Practice adding an index to a table that is large.
+
+**Scenario**: We have added lots of player matches, and looking up stuff is getting slow. We have to add an index to allow better performance.
+
+**Steps**:
+1. Add data to the matches table by running scripts/insert_match_data.sh. It should add 1 mil randomized entries to the matches table
+2. Test the 'Find By' and 'getTopScores' endpoints in the MatchController. Measure how long some take.
+3. Create a migration to add an index to the timeStarted and timeEnded columns
+4. Run the migration. Discuss the factors that impact how long this will take. What happens with the table in the meantime?
+5. Test the endpoints again. Did the performance improve? What else could improve it if it needs to be further improved?
+
+
+**Learning Points**:
+- Make sure to use if not exists when creating an index.
+- Know what to do when you hit a timeout
+- Understand the impact of adding an index. Does it lock the table? How long will it take? What happens if the migration times out?
+
+**Output**: Write your index migration SQL to the Slack channel. How much was the improvement? List the issues you ran into and what you did to solve them.
+
+## Exercise 5: Rename Player Username
 
 **Objective**: Learn safe column renaming techniques.
 
@@ -110,7 +220,80 @@ This document contains hands-on exercises to practice database migration pattern
 
 ---
 
-## Exercise 4: Add Score History Table
+## Exercise 6: Add Soft Delete Support
+
+**Objective**: Implement soft delete pattern for data retention.
+
+**Scenario**: Players should be "deleted" but retained for compliance and analytics.
+
+**Requirements**:
+1. Add deleted_at column to players table
+2. Update queries to filter out deleted players
+3. Create methods for soft delete and restore
+4. Ensure referential integrity
+
+**Steps**:
+1. Create migration to add deleted_at (TIMESTAMP, nullable)
+2. Update Player entity with @Where annotation
+3. Update PlayerRepository with soft delete method
+4. Update PlayerService to use soft delete
+5. Add restore functionality
+6. Test delete and restore operations
+
+**Validation**:
+- Deleted players don't appear in normal queries
+- Deleted players' data is retained in database
+- Can restore deleted players
+- Foreign key relationships handled correctly
+
+**Learning Points**:
+- Soft delete vs hard delete
+- JPA @Where clause
+- Data retention strategies
+- Compliance considerations
+
+---
+
+## At this point, you've reached all the exercises I've prepared.
+## the rest are AI generated exercises that may or may not be working.
+
+
+
+## Exercise 6: Add Game Metadata
+
+**Objective**: Practice adding multiple columns and working with JSON data.
+
+**Scenario**: Game sessions need to store additional metadata like game mode, duration, and settings.
+
+**Requirements**:
+1. Add `game_mode` column (VARCHAR, values: 'casual', 'ranked', 'tournament')
+2. Add `duration_seconds` column (INTEGER, nullable)
+3. Add `settings` column (JSON, nullable) for flexible configuration storage
+4. Set default game_mode to 'casual' for existing games
+
+**Steps**:
+1. Create a new migration file
+2. Add the three new columns
+3. Backfill game_mode for existing games
+4. Update the Game entity with new fields
+5. Update GameService to handle new fields
+6. Test with different game modes and settings
+
+**Validation**:
+- Verify all existing games have game_mode = 'casual'
+- Create new games with different modes
+- Store and retrieve JSON settings (e.g., `{"difficulty": "hard", "map": "arena_1"}`)
+
+**Learning Points**:
+- Working with ENUM-like values in PostgreSQL
+- Using JSON columns for flexible data
+- Default values vs nullable columns
+- When to use structured vs unstructured data
+
+---
+
+
+## Exercise 7: Add Score History Table
 
 **Objective**: Practice creating new tables with foreign key relationships.
 
@@ -156,7 +339,7 @@ score_history:
 
 ---
 
-## Exercise 5: Add Composite Index
+## Exercise 8: Add Composite Index
 
 **Objective**: Learn to identify and create performance-improving indexes.
 
@@ -187,7 +370,7 @@ score_history:
 
 ---
 
-## Exercise 6: Migrate to UUID Primary Keys
+## Exercise 9: Migrate to UUID Primary Keys
 
 **Objective**: Practice complex schema changes (changing primary key type).
 
@@ -221,40 +404,6 @@ score_history:
 - Production migration planning
 
 **Note**: This is an advanced exercise. Consider doing it in a separate branch.
-
----
-
-## Exercise 7: Add Soft Delete Support
-
-**Objective**: Implement soft delete pattern for data retention.
-
-**Scenario**: Players should be "deleted" but retained for compliance and analytics.
-
-**Requirements**:
-1. Add deleted_at column to players table
-2. Update queries to filter out deleted players
-3. Create methods for soft delete and restore
-4. Ensure referential integrity
-
-**Steps**:
-1. Create migration to add deleted_at (TIMESTAMP, nullable)
-2. Update Player entity with @Where annotation
-3. Update PlayerRepository with soft delete method
-4. Update PlayerService to use soft delete
-5. Add restore functionality
-6. Test delete and restore operations
-
-**Validation**:
-- Deleted players don't appear in normal queries
-- Deleted players' data is retained in database
-- Can restore deleted players
-- Foreign key relationships handled correctly
-
-**Learning Points**:
-- Soft delete vs hard delete
-- JPA @Where clause
-- Data retention strategies
-- Compliance considerations
 
 ---
 
@@ -377,7 +526,6 @@ CREATE TABLE games_y2024m01 PARTITION OF games_partitioned
 
 When working through these exercises, ensure you:
 
-- [ ] Name migrations descriptively with timestamp prefix
 - [ ] Test migrations on local database first
 - [ ] Write reversible migrations when possible
 - [ ] Add appropriate indexes for foreign keys

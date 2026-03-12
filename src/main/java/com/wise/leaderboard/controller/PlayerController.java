@@ -36,7 +36,8 @@ public class PlayerController {
     public ResponseEntity<Player> createPlayer(@Valid @RequestBody CreatePlayerRequest request) {
         Player player = new Player();
         player.setUsername(request.getUsername());
-        player.setEmail(request.getEmail());
+        // TODO: Exercise 1 - uncomment this
+        //player.setEmail(request.getEmail());
 
         Player saved = playerRepository.save(player);
         return ResponseEntity.status(HttpStatus.CREATED).body(saved);
